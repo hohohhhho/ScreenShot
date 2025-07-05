@@ -33,6 +33,9 @@ public:
     void mousePressEvent(QMouseEvent* ev)override;
     void mouseMoveEvent(QMouseEvent* ev)override;
     void mouseReleaseEvent(QMouseEvent* ev)override;
+
+public slots:
+
 signals:
     void workStateChanged();
 
@@ -50,5 +53,6 @@ private:
     bool removeFromStartup();
     void loadFromJson();
     void saveToJson();
+    bool createNewHotKey();
 };
 #endif // WIDGET_H

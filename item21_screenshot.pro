@@ -12,10 +12,12 @@ CONFIG += c++17
 SOURCES += \
     main.cpp \
     setwidget.cpp \
+    shortcutinputer.cpp \
     widget.cpp
 
 HEADERS += \
     setwidget.h \
+    shortcutinputer.h \
     widget.h
 
 FORMS += \

@@ -1,6 +1,8 @@
 #ifndef SETWIDGET_H
 #define SETWIDGET_H
 
+#include "shortcutinputer.h"
+
 #include <QCheckBox>
 #include <QLineEdit>
 #include <QPushButton>
@@ -17,14 +19,14 @@ class SetWidget : public QWidget
 public:
     explicit SetWidget(QWidget *parent = nullptr);
     ~SetWidget();
-    QPushButton* hotKeyButton();
+    ShortCutInputer* hotKeyButton();
     QPushButton* savePathButton();
     QPushButton* colorButton();
     QPushButton* saveButton();
     QCheckBox* autoStartBox();
-    QLineEdit* hotKeyEdit();
     QLineEdit* savePathEdit();
     void updateColor(QColor color);
+    void setCombo(QString combo);
 
 private:
     Ui::SetWidget *ui;

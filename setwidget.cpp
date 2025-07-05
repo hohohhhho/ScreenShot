@@ -15,6 +15,9 @@ SetWidget::SetWidget(QWidget *parent)
                         "font-family:微软雅黑;"
                         "color:red;"
                         "}");
+    connect(ui->pushButton,&QPushButton::clicked,this,[=](){
+        ui->btn_hotKey->startCapture();
+    });
 }
 
 SetWidget::~SetWidget()
@@ -22,7 +25,7 @@ SetWidget::~SetWidget()
     delete ui;
 }
 
-QPushButton *SetWidget::hotKeyButton()
+ShortCutInputer *SetWidget::hotKeyButton()
 {
     return ui->btn_hotKey;
 }
@@ -47,11 +50,6 @@ QCheckBox *SetWidget::autoStartBox()
     return ui->box_autoStart;
 }
 
-QLineEdit *SetWidget::hotKeyEdit()
-{
-    return ui->edit_hotKey;
-}
-
 QLineEdit *SetWidget::savePathEdit()
 {
     return ui->edit_savePath;
@@ -70,7 +68,14 @@ void SetWidget::updateColor(QColor color)
                         "color:rgb(%1,%2,%3);"
                         "}").arg(color.red()).arg(color.green()).arg(color.blue());
 
-    qDebug()<<"style"<<style;
+    // qDebug()<<"style"<<style;
     this->setStyleSheet("");//先设置为空，删除原样式表缓存
     this->setStyleSheet(style);
+}
+
+void SetWidget::setCombo(QString combo)
+{
+    auto keys = ShortCutInputer::toKeyCombo(combo);
+
+    ui->btn_hotKey->setCombo(keys);
 }

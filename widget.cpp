@@ -43,12 +43,14 @@ Widget::Widget(QWidget *parent)
             delete setWidget;
         }
         setWidget=new SetWidget;
+        setWidget->setCombo(config.hotKey);
         setWidget->autoStartBox()->setChecked(config.autoStart);
         setWidget->updateColor(config.color);
         setWidget->savePathEdit()->setText(config.savePath);
 
-        connect(setWidget->hotKeyButton(),&QPushButton::clicked,this,[=](){
-
+        connect(setWidget->hotKeyButton(),&ShortCutInputer::result,this,[=](QKeyCombination keys){
+            config.hotKey = ShortCutInputer::fromKeyCombo(keys);
+            createNewHotKey();
         });
         connect(setWidget->savePathButton(),&QPushButton::clicked,this,[=](){
             QString path = QFileDialog::getExistingDirectory(this);
@@ -95,22 +97,15 @@ Widget::Widget(QWidget *parent)
     static int num_try=0;
     QTimer* timer=new QTimer(this);
     connect(timer,&QTimer::timeout,this,[=](){
+        bool result = createNewHotKey();
 
-        HWND hwnd = reinterpret_cast<HWND>(this->winId());
-        if(!hwnd){
-            QMessageBox::critical(this,tr("错误"),tr("窗口句柄为空，程序退出"));
-            qApp->exit();
-        }
-
-        this->setFocus();
-        bool result=RegisterHotKey(hwnd,1,MOD_CONTROL|MOD_SHIFT,'C');
         if(result){
             this->move(0,0);
             this->resize(screen->size());
             timer->stop();
             timer->deleteLater();
         }else{
-            if(num_try >= 5){
+            if(num_try >= 3){
                 QMessageBox::critical(this,tr("提示"),tr("失败次数过多，程序退出"));
                 qApp->exit();
             }else{
@@ -215,12 +210,14 @@ void Widget::mouseReleaseEvent(QMouseEvent *ev)
     }
 
     QDir dir(config.savePath);
-    if(!dir.exists()){//如果配置里的路径不存在则默认一个保存路径
+    if(!dir.exists() || config.savePath.isEmpty()){//如果配置里的路径不存在则默认一个保存路径
+        QMessageBox::information(this,"提示",dir.absolutePath());
         dir =(QDir::currentPath() + "/pxp");
         if(!dir.exists()){
-            dir.mkpath(".");
+            dir.mkpath(dir.absolutePath());
         }
     }
+
 
     QDateTime now = QDateTime::currentDateTime();
     QString filename = now.toString("yyyy-MM-dd_HHmmss") + ".png";
@@ -238,6 +235,89 @@ void Widget::mouseReleaseEvent(QMouseEvent *ev)
     this->y_first=-1;
     this->working=false;
     this->hide();
+}
+
+bool Widget::createNewHotKey()
+{
+    HWND hwnd = reinterpret_cast<HWND>(this->winId());
+    if(!hwnd){
+        QMessageBox::critical(this,tr("错误"),tr("窗口句柄为空，程序退出"));
+        qApp->exit();
+    }
+
+    UnregisterHotKey(hwnd, 1);//注销可能存在的旧热键
+
+    QKeyCombination combo = ShortCutInputer::toKeyCombo(config.hotKey);
+    // 转换修饰键
+    uint modifiers = 0;
+    Qt::KeyboardModifiers qtMods = combo.keyboardModifiers();
+
+    if (qtMods & Qt::ControlModifier) modifiers |= MOD_CONTROL;
+    if (qtMods & Qt::AltModifier) modifiers |= MOD_ALT;
+    if (qtMods & Qt::ShiftModifier) modifiers |= MOD_SHIFT;
+    if (qtMods & Qt::MetaModifier) modifiers |= MOD_WIN;
+
+    // 转换键值
+    UINT key = 0;
+    Qt::Key qtKey = combo.key();
+
+    // 处理特殊键值映射
+    switch (qtKey) {
+    case Qt::Key_Escape: key = VK_ESCAPE; break;
+    case Qt::Key_Tab: key = VK_TAB; break;
+    case Qt::Key_Backspace: key = VK_BACK; break;
+    case Qt::Key_Return: key = VK_RETURN; break;
+    case Qt::Key_Enter: key = VK_RETURN; break; // 小键盘回车
+    case Qt::Key_Insert: key = VK_INSERT; break;
+    case Qt::Key_Delete: key = VK_DELETE; break;
+    case Qt::Key_Pause: key = VK_PAUSE; break;
+    case Qt::Key_Print: key = VK_PRINT; break;
+    case Qt::Key_Home: key = VK_HOME; break;
+    case Qt::Key_End: key = VK_END; break;
+    case Qt::Key_Left: key = VK_LEFT; break;
+    case Qt::Key_Up: key = VK_UP; break;
+    case Qt::Key_Right: key = VK_RIGHT; break;
+    case Qt::Key_Down: key = VK_DOWN; break;
+    case Qt::Key_PageUp: key = VK_PRIOR; break;
+    case Qt::Key_PageDown: key = VK_NEXT; break;
+    case Qt::Key_CapsLock: key = VK_CAPITAL; break;
+    case Qt::Key_NumLock: key = VK_NUMLOCK; break;
+    case Qt::Key_ScrollLock: key = VK_SCROLL; break;
+    case Qt::Key_F1: key = VK_F1; break;
+    case Qt::Key_F2: key = VK_F2; break;
+    case Qt::Key_F3: key = VK_F3; break;
+    case Qt::Key_F4: key = VK_F4; break;
+    case Qt::Key_F5: key = VK_F5; break;
+    case Qt::Key_F6: key = VK_F6; break;
+    case Qt::Key_F7: key = VK_F7; break;
+    case Qt::Key_F8: key = VK_F8; break;
+    case Qt::Key_F9: key = VK_F9; break;
+    case Qt::Key_F10: key = VK_F10; break;
+    case Qt::Key_F11: key = VK_F11; break;
+    case Qt::Key_F12: key = VK_F12; break;
+    case Qt::Key_Space: key = VK_SPACE; break;
+    case Qt::Key_Plus: key = VK_ADD; break;
+    case Qt::Key_Minus: key = VK_SUBTRACT; break;
+    case Qt::Key_Asterisk: key = VK_MULTIPLY; break;
+    case Qt::Key_Slash: key = VK_DIVIDE; break;
+    case Qt::Key_Period: key = VK_DECIMAL; break;
+    default:
+        // 处理字母和数字键
+        if (qtKey >= Qt::Key_A && qtKey <= Qt::Key_Z) {
+            key = 'A' + (qtKey - Qt::Key_A);
+        } else if (qtKey >= Qt::Key_0 && qtKey <= Qt::Key_9) {
+            key = '0' + (qtKey - Qt::Key_0);
+        } else if (qtKey >= Qt::Key_F1 && qtKey <= Qt::Key_F24) {
+            key = VK_F1 + (qtKey - Qt::Key_F1);
+        } else {
+            // 无法识别的键值
+            modifiers = MOD_CONTROL | MOD_SHIFT;
+            key = 'C';
+        }
+    }
+
+    // 注册热键
+    return RegisterHotKey(hwnd, 1, modifiers, key);
 }
 
 bool Widget::addToStartup() {

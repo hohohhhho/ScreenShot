@@ -18,6 +18,7 @@
 #include <QtWidgets/QSpacerItem>
 #include <QtWidgets/QVBoxLayout>
 #include <QtWidgets/QWidget>
+#include "shortcutinputer.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -26,8 +27,8 @@ class Ui_SetWidget
 public:
     QVBoxLayout *verticalLayout;
     QHBoxLayout *horizontalLayout;
-    QPushButton *btn_hotKey;
-    QLineEdit *edit_hotKey;
+    QPushButton *pushButton;
+    ShortCutInputer *btn_hotKey;
     QHBoxLayout *horizontalLayout_4;
     QPushButton *btn_savePath;
     QLineEdit *edit_savePath;
@@ -48,16 +49,15 @@ public:
         verticalLayout->setObjectName("verticalLayout");
         horizontalLayout = new QHBoxLayout();
         horizontalLayout->setObjectName("horizontalLayout");
-        btn_hotKey = new QPushButton(SetWidget);
+        pushButton = new QPushButton(SetWidget);
+        pushButton->setObjectName("pushButton");
+
+        horizontalLayout->addWidget(pushButton);
+
+        btn_hotKey = new ShortCutInputer(SetWidget);
         btn_hotKey->setObjectName("btn_hotKey");
 
         horizontalLayout->addWidget(btn_hotKey);
-
-        edit_hotKey = new QLineEdit(SetWidget);
-        edit_hotKey->setObjectName("edit_hotKey");
-        edit_hotKey->setAlignment(Qt::AlignmentFlag::AlignCenter);
-
-        horizontalLayout->addWidget(edit_hotKey);
 
 
         verticalLayout->addLayout(horizontalLayout);
@@ -121,7 +121,8 @@ public:
     void retranslateUi(QWidget *SetWidget)
     {
         SetWidget->setWindowTitle(QCoreApplication::translate("SetWidget", "Form", nullptr));
-        btn_hotKey->setText(QCoreApplication::translate("SetWidget", "\345\277\253\346\215\267\351\224\256\347\273\204\345\220\210", nullptr));
+        pushButton->setText(QCoreApplication::translate("SetWidget", "\347\202\271\345\207\273\346\233\264\346\224\271\347\203\255\351\224\256", nullptr));
+        btn_hotKey->setText(QString());
         btn_savePath->setText(QCoreApplication::translate("SetWidget", "\345\233\276\347\211\207\344\277\235\345\255\230\350\267\257\345\276\204", nullptr));
         btn_color->setText(QCoreApplication::translate("SetWidget", "\346\210\252\345\261\217\347\272\277\346\235\241\351\242\234\350\211\262", nullptr));
         box_autoStart->setText(QCoreApplication::translate("SetWidget", "\345\274\200\346\234\272\350\207\252\345\220\257\345\212\250", nullptr));
