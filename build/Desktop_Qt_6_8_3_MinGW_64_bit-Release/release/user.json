@@ -1,6 +1,6 @@
 {
-    "autoStart": false,
-    "color": "0,0,0",
-    "hotKey": "",
-    "savePath": ""
+    "autoStart": true,
+    "color": "85,170,0",
+    "hotKey": "Ctrl+Shift+C",
+    "savePath": "F:/桌面/pxp"
 }

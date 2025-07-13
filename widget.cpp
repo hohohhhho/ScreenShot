@@ -15,6 +15,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QFileDialog>
+#include <QApplication>
 
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
@@ -97,6 +98,7 @@ Widget::Widget(QWidget *parent)
     static int num_try=0;
     QTimer* timer=new QTimer(this);
     connect(timer,&QTimer::timeout,this,[=](){
+
         bool result = createNewHotKey();
 
         if(result){
@@ -104,7 +106,7 @@ Widget::Widget(QWidget *parent)
             this->resize(screen->size());
             timer->stop();
             timer->deleteLater();
-        }else{
+      }else{
             if(num_try >= 3){
                 QMessageBox::critical(this,tr("提示"),tr("失败次数过多，程序退出"));
                 qApp->exit();
@@ -113,6 +115,11 @@ Widget::Widget(QWidget *parent)
                 QMessageBox::warning(this,tr("提示"),QString(tr("热键申请失败:%1,点击确认以重新申请")).arg(GetLastError()));
             }
         }
+        // if(result && loaded){
+        //     timer->stop();
+        //     timer->deleteLater();
+        // }
+
     });
     timer->start(500);
 }
@@ -211,8 +218,7 @@ void Widget::mouseReleaseEvent(QMouseEvent *ev)
 
     QDir dir(config.savePath);
     if(!dir.exists() || config.savePath.isEmpty()){//如果配置里的路径不存在则默认一个保存路径
-        QMessageBox::information(this,"提示",dir.absolutePath());
-        dir =(QDir::currentPath() + "/pxp");
+        dir =(QApplication::applicationDirPath() + "/pxp");
         if(!dir.exists()){
             dir.mkpath(dir.absolutePath());
         }
@@ -225,7 +231,7 @@ void Widget::mouseReleaseEvent(QMouseEvent *ev)
     // QString finaldir(dir.absolutePath()+"/"+now.toString().replace(":","-").replace(" ","_")+".png");
     qDebug()<<"finaldir"<<finaldir;
     if(!pxp.save(finaldir)){
-        QMessageBox::critical(this,tr("提示"),tr("图片保存失败"));
+        QMessageBox::critical(this,tr("提示"),QString( tr("图片保存失败").append(finaldir) ));
     }
     QImage image=pxp.toImage();
     QClipboard* clip=QGuiApplication::clipboard();
@@ -364,7 +370,8 @@ bool Widget::removeFromStartup() {
 
 void Widget::loadFromJson()
 {
-    QString filename=QDir(QDir::currentPath()).filePath("user.json");
+    /*QDir::currentPath()).filePath("user.json"*/
+    QString filename=QDir( QApplication::applicationDirPath() ).filePath("user.json");
     QFile file(filename);
     if(!file.open(QIODevice::ReadOnly)){//没有配置文件则直接跳过
         return;
@@ -372,6 +379,7 @@ void Widget::loadFromJson()
     QByteArray data = file.readAll();
     QJsonDocument document = QJsonDocument::fromJson(data);
     if(document.isObject()){
+        // loaded = true;
         QJsonObject oj = document.object();
         config.hotKey = oj["hotKey"].toString();
         config.savePath = oj["savePath"].toString();
@@ -385,7 +393,7 @@ void Widget::loadFromJson()
 
 void Widget::saveToJson()
 {
-    QDir dir(QDir::currentPath());
+    QDir dir(QApplication::applicationDirPath());
     if(!dir.exists()){
         dir.mkpath(".");
     }

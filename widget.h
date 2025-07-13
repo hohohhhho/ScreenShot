@@ -45,6 +45,7 @@ private:
     QColor pen_color=QColor(20,160,180);
     QPointer<SetWidget> setWidget;
     UserSet config;
+    // bool loaded = false;
 
     int x_first=-1,y_first=-1;
     int x_moving=-1,y_moving=-1;
